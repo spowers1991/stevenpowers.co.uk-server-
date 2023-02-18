@@ -22,6 +22,7 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
 
   app.use(cors());
 
+//New user registration
   app.post('/user', async (req, res) => {
     const collection = db.collection('users');
     const existingUser = await collection.findOne({
@@ -69,10 +70,15 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
     }
 
     // Create a JWT with the user's information as the payload
-    const token = jwt.sign({ userId: user._id, username: user.username }, 'secret');
-    console.log(token)
-    res.json({ token });
-  });
+     // Create a JWT with the user's information as the payload
+    const token = jwt.sign({ 
+      userId: user._id, 
+      username: user.username, 
+      account_level: user.account_level 
+    }, 'secret');
+      console.log(token)
+      res.json({ token });
+    });
 
   // authentication
   app.get('/api/check_auth', (req, res) => {
@@ -89,7 +95,7 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
     }
   });
 
-
+//Get an array of all users
   app.get('/users', (req, res) => {
     const collection = db.collection('users');
     collection.find({}).toArray((err, users) => {
@@ -101,24 +107,28 @@ MongoClient.connect(url, { useUnifiedTopology: true }, (err, client) => {
     });
   });
   
+  const ObjectId = require('mongodb').ObjectId;
   // Define API endpoint for updating blog and users collections
   app.post('/update', async (req, res) => {
-  try {
-    const { id } = req.body;
+    try {
+      const { id, response } = req.body;
 
-    // Update user collection
-    await db.collection('users').updateOne({ _id: id }, { $set: { account_level: 'approved' } });
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid ID' });
+      }
 
-    res.status(200).json({ message: 'Collections updated successfully' });
-    console.log(id)
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating collections' });
-  }
-});
-
+      // Update user collection
+      await db.collection('users').updateOne({ _id: new ObjectId(id) }, { $set: { account_level: response } });
+      res.status(200).json({ message: 'Collections updated successfully' });
+    } catch (err) {
+      res.status(500).json({ message: 'Error updating collections' });
+    }
+  });
 
   app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
   });
-});
+
+})
+
 
