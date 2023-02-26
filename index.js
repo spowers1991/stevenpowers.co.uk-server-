@@ -18,6 +18,8 @@ const loginRouter = require('./routes/login');
 const authRouter = require('./routes/auth');
 const getUsersRouter = require('./routes/getUsers');
 const updateUsersRouter = require('./routes/updateUsers');
+const createPostsRouter = require('./routes/createPost');
+const getPostsRouter = require('./routes/getPosts');
 
 // Use routes
 app.use('/user', registrationRouter);
@@ -25,6 +27,8 @@ app.use('/login', loginRouter);
 app.use('/api/check_auth', authRouter);
 app.use('/users', getUsersRouter);
 app.use('/update', updateUsersRouter);
+app.use('/post', createPostsRouter);
+app.use('/posts', getPostsRouter);
 
 // Start the server after connecting to the database
 connect().then(() => {
