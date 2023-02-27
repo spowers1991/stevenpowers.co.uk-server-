@@ -20,15 +20,19 @@ const getUsersRouter = require('./routes/getUsers');
 const updateUsersRouter = require('./routes/updateUsers');
 const createPostsRouter = require('./routes/createPost');
 const getPostsRouter = require('./routes/getPosts');
+const updatePostRouter = require('./routes/updatePost');
+const deletePostRouter = require('./routes/deletePost');
 
 // Use routes
-app.use('/user', registrationRouter);
+app.use('/user-registration', registrationRouter);
 app.use('/login', loginRouter);
 app.use('/api/check_auth', authRouter);
-app.use('/users', getUsersRouter);
-app.use('/update', updateUsersRouter);
-app.use('/post', createPostsRouter);
-app.use('/posts', getPostsRouter);
+app.use('/get-users', getUsersRouter);
+app.use('/update-user', updateUsersRouter);
+app.use('/create-post', createPostsRouter);
+app.use('/get-posts', getPostsRouter);
+app.use('/update-post', updatePostRouter);
+app.use('/delete-post', deletePostRouter);
 
 // Start the server after connecting to the database
 connect().then(() => {
