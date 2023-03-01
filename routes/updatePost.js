@@ -1,26 +1,42 @@
 const express = require('express');
+const multer = require('multer');
 const router = express.Router();
 const { getDb } = require('../db');
 const db = getDb();
 
 const ObjectId = require('mongodb').ObjectId;
 
-router.post('/', async (req, res) => {
+// Set up multer to handle file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/images')
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname)
+  }
+});
+const upload = multer({ storage: storage });
+
+router.post('/', upload.single('featuredImage'), async (req, res) => {
   try {
-    const { id, title, featuredImage, content } = req.body;
+    const { id, title, content } = req.body;
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid ID' });
     }
 
-    await db.collection('posts').updateOne({ _id: new ObjectId(id) }, { $set: { 
-      title: title,
-      featuredImage: featuredImage,
-      content: content
-    } });
-    res.status(200).json({ message: 'Collections updated successfully' });
+    const collection = db.collection('posts');
+    let updateData = { title: title, content: content };
+
+    if (req.file) {
+      updateData.featuredImage = '/images/' + req.file.filename;
+    }
+
+    await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateData });
+    res.status(200).json({ message: 'Post updated successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Error updating collections' });
+    console.log(err);
+    res.status(500).json({ message: 'Error updating post' });
   }
 });
 

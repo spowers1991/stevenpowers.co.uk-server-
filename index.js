@@ -11,7 +11,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors());
 // Add helmet middleware here to set various HTTP headers
-
+app.use(express.static('public'));
 // Import routes
 const registrationRouter = require('./routes/registration');
 const loginRouter = require('./routes/login');

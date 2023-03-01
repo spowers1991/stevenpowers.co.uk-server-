@@ -12,7 +12,6 @@ router.delete('/:id', async (req, res) => {
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid ID' });
     }
-    console.log(id)
     const result = await db.collection('posts').deleteOne({ _id: new ObjectId(id) });
     if (result.deletedCount === 1) {
       return res.status(200).json({ message: 'Post deleted successfully' });
