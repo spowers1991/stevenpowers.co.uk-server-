@@ -17,9 +17,9 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-router.post('/', upload.single('featuredImage'), async (req, res) => {
+router.post('/', upload.array('images'), async (req, res) => {
   try {
-    const { id, title, content } = req.body;
+    const { id, title, content, previouslyUploadedImages } = req.body;
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Invalid ID' });
@@ -28,8 +28,12 @@ router.post('/', upload.single('featuredImage'), async (req, res) => {
     const collection = db.collection('posts');
     let updateData = { title: title, content: content };
 
-    if (req.file) {
-      updateData.featuredImage = '/images/' + req.file.filename;
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(file => '/images/' + file.filename);
+      updateData.images = previouslyUploadedImages.split(",").concat(newImages).filter(Boolean);
+    }
+    else {
+      updateData.images = previouslyUploadedImages.split(",").filter(Boolean);
     }
 
     await collection.updateOne({ _id: new ObjectId(id) }, { $set: updateData });

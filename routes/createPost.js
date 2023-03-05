@@ -15,18 +15,23 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-router.post('/', upload.single('featuredImage'), async (req, res) => {
-  const collection = db.collection('posts');
+router.post('/', upload.array('images'), async (req, res) => {
+  try {
+    const collection = db.collection('posts');
 
-  const data = {
-    title: req.body.title,
-    featuredImage: req.file ? '/images/' + req.file.filename : null,
-    content: req.body.content,
-  };
-  collection.insertOne(data, (err, result) => {
-    if (err) throw err;
+    const data = {
+      title: req.body.title,
+      images: req.files.map(file => '/images/' + file.filename),
+      content: req.body.content,
+    };
+    
+    const result = await collection.insertOne(data);
+    
     res.send({ message: 'Data inserted successfully' });
-  });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: 'Error inserting data' });
+  }
 });
 
 module.exports = router;
