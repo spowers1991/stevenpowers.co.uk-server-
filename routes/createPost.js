@@ -2,9 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const { getDb } = require('../db');
-const cloudinary = require('cloudinary').v2;
 const db = getDb();
+const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 // Configure Cloudinary
 cloudinary.config({
@@ -30,12 +33,17 @@ router.post('/', upload.array('images'), async (req, res) => {
 
     const data = {
       title: req.body.title,
-      images: req.files.map(file => file.secure_url),
+      images: [],
       content: req.body.content,
     };
-    
+
+    // Loop through the uploaded files and upload them to Cloudinary
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path);
+      data.images.push(result.secure_url);
+    }
+
     const result = await collection.insertOne(data);
-    
     res.send({ message: 'Data inserted successfully' });
   } catch (err) {
     console.log(err);
