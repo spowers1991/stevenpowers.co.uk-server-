@@ -2,17 +2,26 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const { getDb } = require('../db');
+const cloudinary = require('cloudinary').v2;
 const db = getDb();
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// Set up multer to handle file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/images')
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// Set up multer to handle file uploads with Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'stevenpowers.co.uk', // Optional - set a folder to store the uploaded files in
+    allowed_formats: ['jpg', 'png', 'jpeg'], // Optional - set allowed file formats
+  },
+});
+
 const upload = multer({ storage: storage });
 
 router.post('/', upload.array('images'), async (req, res) => {
@@ -21,7 +30,7 @@ router.post('/', upload.array('images'), async (req, res) => {
 
     const data = {
       title: req.body.title,
-      images: req.files.map(file => '/images/' + file.filename),
+      images: req.files.map(file => file.secure_url),
       content: req.body.content,
     };
     

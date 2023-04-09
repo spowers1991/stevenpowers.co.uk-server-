@@ -3,6 +3,9 @@ const multer = require('multer');
 const router = express.Router();
 const { getDb } = require('../db');
 const db = getDb();
+const cloudinary = require('cloudinary').v2;
+const dotenv = require('dotenv');
+dotenv.config();
 
 const ObjectId = require('mongodb').ObjectId;
 
@@ -15,7 +18,15 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + file.originalname)
   }
 });
+
 const upload = multer({ storage: storage });
+
+// Cloudinary configuration
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 router.post('/', upload.array('images'), async (req, res) => {
   try {
@@ -29,10 +40,12 @@ router.post('/', upload.array('images'), async (req, res) => {
     let updateData = { title: title, content: content };
 
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => '/images/' + file.filename);
+      const newImages = await Promise.all(req.files.map(async (file) => {
+        const result = await cloudinary.uploader.upload(file.path);
+        return result.secure_url;
+      }));
       updateData.images = previouslyUploadedImages.split(",").concat(newImages).filter(Boolean);
-    }
-    else {
+    } else {
       updateData.images = previouslyUploadedImages.split(",").filter(Boolean);
     }
 
